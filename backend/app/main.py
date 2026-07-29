@@ -1,19 +1,11 @@
 from fastapi import FastAPI
+from app.api.routes import router
+from app.core.config import settings
 
 app = FastAPI(
-    title="VTU AI Study Portal API",
-    version="0.1.0",
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
     description="Backend API for the VTU AI Study Portal"
 )
 
-@app.get("/")
-def root():
-    return {
-        "message": "Welcome to VTU AI Study Portal 🚀"
-    }
-
-@app.get("/health")
-def health():
-    return {
-        "status": "healthy"
-    }
+app.include_router(router, prefix="/api/v1")
