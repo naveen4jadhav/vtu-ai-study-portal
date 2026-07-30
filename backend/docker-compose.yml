@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: vtu_ai_study_portal_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vtu_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-this-password}
+      POSTGRES_DB: ${POSTGRES_DB:-vtu_ai_study_portal}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vtu_admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vtu_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vtu_ai_study_portal_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./alembic:/app/alembic
+      - backend_logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vtu_network
+
+volumes:
+  postgres_data:
+  backend_logs:
+
+networks:
+  vtu_network:
+    driver: bridge
